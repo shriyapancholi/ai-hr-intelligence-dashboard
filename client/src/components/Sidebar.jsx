@@ -2,19 +2,32 @@ import { Link } from "react-router-dom";
 
 export default function Sidebar() {
   return (
-    <div style={{
-      width: "220px",
-      height: "100vh",
-      background: "#0f172a",
-      color: "white",
-      padding: "20px"
-    }}>
-      <h2>HR AI</h2>
-      <hr />
+    <div style={sidebar}>
+      <h2 style={{ marginBottom: 30 }}>HR AI</h2>
 
-      <p><Link to="/dashboard" style={{ color: "white" }}>Dashboard</Link></p>
-      <p><Link to="/employees" style={{ color: "white" }}>Employees</Link></p>
-      <p><Link to="/upload" style={{ color: "white" }}>Upload Transcript</Link></p>
+      <Link to="/dashboard" style={link}>Dashboard</Link>
+      <Link to="/employees" style={link}>Employees</Link>
+      <Link to="/upload" style={link}>Upload</Link>
+      <Link to="/analytics" style={link}>Analytics</Link>
+      <Link to="/reminders" style={link}>Reminders</Link>
+      <Link to="/chat" style={link}>AI Chat</Link>
     </div>
   );
 }
+
+const sidebar = {
+  width: 230,
+  height: "100vh",
+  background: "#020617",
+  color: "white",
+  padding: 20,
+  display: "flex",
+  flexDirection: "column",
+  gap: 15
+};
+
+const link = {
+  color: "#94a3b8",
+  textDecoration: "none",
+  fontSize: 16
+};
