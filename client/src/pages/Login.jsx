@@ -1,69 +1,94 @@
 import { useState } from "react";
-import API from "../services/api";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
 export default function Login() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-    const handleLogin = async () => {
-        try {
-            const res = await API.post("/auth/login", { email, password });
-            localStorage.setItem("token", res.data.token);
-            window.location.href = "/dashboard";
-        } catch (err) {
-            alert("Login failed");
-        }
-    };
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-    return (
-        <div style={{
-            height: "100vh",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            background: "#111827"
-        }}>
-            <div style={{
-                background: "white",
-                padding: "40px",
-                borderRadius: "10px",
-                width: "350px",
-                textAlign: "center"
-            }}>
-                <h2>AI HR Intelligence</h2>
-                <p>Login to your dashboard</p>
+  const handleLogin = (e) => {
+    e.preventDefault();
 
-                <input
-                    placeholder="Email"
-                    onChange={(e) => setEmail(e.target.value)}
-                    style={{ width: "100%", padding: 10, marginTop: 10 }}
-                />
-
-                <input
-                    placeholder="Password"
-                    type="password"
-                    onChange={(e) => setPassword(e.target.value)}
-                    style={{ width: "100%", padding: 10, marginTop: 10 }}
-                />
-
-                <button
-                    onClick={handleLogin}
-                    style={{
-                        width: "100%",
-                        padding: 10,
-                        marginTop: 15,
-                        background: "#2563eb",
-                        color: "white",
-                        border: "none"
-                    }}
-                >
-                    Login
-                </button>
-
-                <p style={{ marginTop: 15 }}>
-                    Don't have an account? <a href="/register">Sign up</a>
-                </p>
-            </div>
-        </div>
+    // Fake auth
+    localStorage.setItem("hr_intel_auth", "true");
+    localStorage.setItem(
+      "hr_intel_user",
+      JSON.stringify({
+        name: "Alex Thompson",
+        role: "HR Director",
+      })
     );
+
+    navigate("/");
+  };
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(180deg,#EEF2FF,#F8FAFC)",
+        flexDirection: "column",
+      }}
+    >
+      {/* Logo */}
+      <div style={{ textAlign: "center", marginBottom: "20px" }}>
+        <div
+          style={{
+            width: "48px",
+            height: "48px",
+            margin: "auto",
+            borderRadius: "12px",
+            background: "linear-gradient(135deg,#4F46E5,#6366F1)",
+          }}
+        ></div>
+        <h2 style={{ marginTop: "10px" }}>HR Intel</h2>
+        <div className="text-muted">Editorial Analytics Dashboard</div>
+      </div>
+
+      {/* Login Card */}
+      <div className="card" style={{ width: "380px", padding: "28px" }}>
+        <h3 style={{ marginBottom: "20px" }}>Sign in to your account</h3>
+
+        <form onSubmit={handleLogin}>
+          <div style={{ marginBottom: "14px" }}>
+            <label>Email address</label>
+            <input
+              className="form-input"
+              placeholder="name@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div style={{ marginBottom: "14px" }}>
+            <label>Password</label>
+            <input
+              type="password"
+              className="form-input"
+              placeholder="********"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary"
+            style={{ width: "100%", justifyContent: "center" }}
+          >
+            Sign in <ArrowRight size={16} />
+          </button>
+        </form>
+
+        <div style={{ marginTop: "16px", textAlign: "center" }}>
+          Don't have an account? <Link to="/register">Signup</Link>
+        </div>
+      </div>
+    </div>
+  );
 }

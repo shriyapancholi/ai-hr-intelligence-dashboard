@@ -1,123 +1,172 @@
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
 import { useState } from "react";
+import { Calendar, FileText, Shield, X } from "lucide-react";
 
 export default function Reminders() {
-  const [reminders, setReminders] = useState([
-    { text: "Schedule meeting with HR team", date: "2026-04-02" }
-  ]);
+  const [openPanel, setOpenPanel] = useState(false);
 
-  const [task, setTask] = useState("");
-  const [date, setDate] = useState("");
-
-  const addReminder = () => {
-    if (!task || !date) return;
-
-    setReminders([...reminders, { text: task, date }]);
-    setTask("");
-    setDate("");
-  };
+  const remindersData = [
+    {
+      title: "Send Offer Letter",
+      person: "Marcus Chen",
+      date: "Oct 24, 2023",
+      status: "Pending",
+      icon: <FileText size={18} />,
+    },
+    {
+      title: "Performance Review Check-in",
+      person: "Elena Rodriguez",
+      date: "Oct 22, 2023",
+      status: "Completed",
+      icon: <Calendar size={18} />,
+    },
+    {
+      title: "Compliance Training Audit",
+      person: "Team Marketing",
+      date: "Oct 25, 2023",
+      status: "Pending",
+      icon: <Shield size={18} />,
+    },
+  ];
 
   return (
-    <div style={{ display: "flex", background: "#f1f5f9" }}>
-      <Sidebar />
+    <div style={{ display: "flex" }}>
 
-      <div style={{ flex: 1 }}>
-        <Navbar />
+      {/* Left Content */}
+      <div style={{ flex: 1, paddingRight: openPanel ? "360px" : "0" }}>
+        <div style={{ marginBottom: "20px" }}>
+          <h1>Reminders</h1>
+          <p className="text-muted">
+            Active editorial tasks requiring attention today
+          </p>
+        </div>
 
-        <div style={{ padding: 30 }}>
-          <h2 style={{ marginBottom: 20 }}>Reminders ⏰</h2>
+        {/* Reminder Cards */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          {remindersData.map((rem, i) => (
+            <div className="card" key={i} style={{ padding: "16px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <div className="icon-box">{rem.icon}</div>
 
-          {/* Add Reminder Card */}
-          <div style={card}>
-            <h3>Add Reminder</h3>
-
-            <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-              <input
-                placeholder="Enter task..."
-                value={task}
-                onChange={(e) => setTask(e.target.value)}
-                style={input}
-              />
-
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                style={input}
-              />
-
-              <button onClick={addReminder} style={btn}>
-                Add
-              </button>
-            </div>
-          </div>
-
-          {/* Reminder List */}
-          <div style={{ marginTop: 20 }}>
-            {reminders.map((r, i) => (
-              <div key={i} style={reminderCard}>
-                <div>
-                  <h4 style={{ margin: 0 }}>{r.text}</h4>
-                  <p style={{ margin: 0, color: "#64748b" }}>{r.date}</p>
+                  <div>
+                    <div style={{ fontWeight: "600" }}>{rem.title}</div>
+                    <div className="text-muted">
+                      {rem.person} • {rem.date}
+                    </div>
+                  </div>
                 </div>
 
-                <button
-                  onClick={() =>
-                    setReminders(reminders.filter((_, idx) => idx !== i))
-                  }
-                  style={deleteBtn}
+                <span
+                  className={`badge ${rem.status === "Completed"
+                      ? "badge-success"
+                      : "badge-warning"
+                    }`}
                 >
-                  Delete
-                </button>
+                  {rem.status}
+                </span>
               </div>
-            ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Add Reminder Button */}
+        <button
+          className="btn btn-primary"
+          style={{ marginTop: "20px" }}
+          onClick={() => setOpenPanel(true)}
+        >
+          Add Reminder
+        </button>
+      </div>
+
+      {/* Right Slide Panel */}
+      {openPanel && (
+        <div
+          style={{
+            position: "fixed",
+            right: 0,
+            top: 0,
+            width: "360px",
+            height: "100vh",
+            background: "#fff",
+            borderLeft: "1px solid var(--gray-200)",
+            padding: "20px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: "16px",
+            }}
+          >
+            <div>
+              <h3>Add Reminder</h3>
+              <div className="text-muted">
+                Schedule a new intelligence task
+              </div>
+            </div>
+            <X
+              style={{ cursor: "pointer" }}
+              onClick={() => setOpenPanel(false)}
+            />
           </div>
 
+          {/* Form */}
+          <input
+            className="form-input"
+            placeholder="Reminder Title"
+            style={{ marginBottom: "12px" }}
+          />
+
+          <select className="form-input" style={{ marginBottom: "12px" }}>
+            <option>Select an employee</option>
+            <option>Sarah Jenkins</option>
+            <option>Marcus Chen</option>
+            <option>Elena Rodriguez</option>
+          </select>
+
+          <input
+            type="date"
+            className="form-input"
+            style={{ marginBottom: "12px" }}
+          />
+
+          <select className="form-input" style={{ marginBottom: "12px" }}>
+            <option>Normal</option>
+            <option>High</option>
+            <option>Low</option>
+          </select>
+
+          <textarea
+            className="form-input"
+            placeholder="Notes..."
+            style={{ height: "100px", marginBottom: "12px" }}
+          />
+
+          <div style={{ marginTop: "auto", display: "flex", gap: "10px" }}>
+            <button
+              className="btn btn-outline"
+              style={{ flex: 1 }}
+              onClick={() => setOpenPanel(false)}
+            >
+              Discard
+            </button>
+
+            <button className="btn btn-primary" style={{ flex: 1 }}>
+              Create Task
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
-
-/* Styles */
-
-const card = {
-  background: "white",
-  padding: 20,
-  borderRadius: 12,
-  boxShadow: "0 4px 10px rgba(0,0,0,0.05)"
-};
-
-const reminderCard = {
-  background: "white",
-  padding: 15,
-  borderRadius: 10,
-  marginBottom: 10,
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
-};
-
-const input = {
-  padding: 10,
-  borderRadius: 8,
-  border: "1px solid #cbd5e1"
-};
-
-const btn = {
-  background: "#2563eb",
-  color: "white",
-  border: "none",
-  padding: "10px 15px",
-  borderRadius: 8
-};
-
-const deleteBtn = {
-  background: "#ef4444",
-  color: "white",
-  border: "none",
-  padding: "6px 12px",
-  borderRadius: 6
-};

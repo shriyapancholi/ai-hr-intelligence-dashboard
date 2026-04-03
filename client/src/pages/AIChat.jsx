@@ -1,121 +1,165 @@
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { Send, Bot, User, Sparkles } from "lucide-react";
 
 export default function AIChat() {
   const [messages, setMessages] = useState([
-    { sender: "ai", text: "Hello! I’m your HR AI assistant 🤖" }
+    {
+      sender: "assistant",
+      text: "Hello! I'm HR Intel AI. Ask me about employee sentiment, burnout risk, retention trends, or meeting analytics.",
+    },
   ]);
+
   const [input, setInput] = useState("");
+  const [typing, setTyping] = useState(false);
+  const chatRef = useRef(null);
+
+  const suggestions = [
+    "Show burnout risk",
+    "Employee sentiment trend",
+    "Who might leave company?",
+    "Meeting overload teams",
+  ];
+
+  useEffect(() => {
+    chatRef.current?.scrollTo({
+      top: chatRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages, typing]);
 
   const sendMessage = () => {
-    if (!input) return;
+    if (!input.trim()) return;
 
-    const newMessages = [
-      ...messages,
-      { sender: "user", text: input },
-      { sender: "ai", text: "AI response coming soon..." }
-    ];
-
-    setMessages(newMessages);
+    const userMessage = { sender: "user", text: input };
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setTyping(true);
+
+    // Fake AI response
+    setTimeout(() => {
+      const aiMessage = {
+        sender: "assistant",
+        text:
+          "Based on recent analytics, the Engineering team shows increased meeting load and burnout risk. Sentiment dropped by 6% this month.",
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+      setTyping(false);
+    }, 1200);
   };
 
   return (
-    <div style={{ display: "flex", background: "#f1f5f9" }}>
-      <Sidebar />
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 120px)" }}>
 
-      <div style={{ flex: 1 }}>
-        <Navbar />
+      {/* Header */}
+      <div className="card" style={{ marginBottom: "16px" }}>
+        <div className="card-header">
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <Sparkles size={18} />
+            <h3>AI Assistant</h3>
+          </div>
+        </div>
+      </div>
 
-        <div style={container}>
-          <h2 style={{ marginBottom: 20 }}>AI HR Assistant</h2>
-
-          {/* Chat Box */}
-          <div style={chatBox}>
-            {messages.map((msg, index) => (
+      {/* Chat Container */}
+      <div
+        className="card"
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        {/* Messages */}
+        <div
+          ref={chatRef}
+          style={{
+            flex: 1,
+            padding: "20px",
+            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+          }}
+        >
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                justifyContent:
+                  msg.sender === "user" ? "flex-end" : "flex-start",
+              }}
+            >
               <div
-                key={index}
                 style={{
-                  display: "flex",
-                  justifyContent:
-                    msg.sender === "user" ? "flex-end" : "flex-start"
+                  maxWidth: "60%",
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  background:
+                    msg.sender === "user"
+                      ? "var(--primary)"
+                      : "var(--gray-100)",
+                  color: msg.sender === "user" ? "#fff" : "var(--gray-800)",
                 }}
               >
-                <div
-                  style={{
-                    ...bubble,
-                    background:
-                      msg.sender === "user" ? "#2563eb" : "#e2e8f0",
-                    color: msg.sender === "user" ? "white" : "#0f172a"
-                  }}
-                >
-                  {msg.text}
-                </div>
+                {msg.text}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
 
-          {/* Input Area */}
-          <div style={inputBox}>
-            <input
-              placeholder="Ask something about employees, sentiment..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              style={inputStyle}
-            />
+          {/* Typing indicator */}
+          {typing && (
+            <div style={{ color: "var(--gray-500)", fontSize: "13px" }}>
+              AI is typing...
+            </div>
+          )}
+        </div>
 
-            <button onClick={sendMessage} style={sendBtn}>
-              Send
+        {/* Suggestions */}
+        <div
+          style={{
+            padding: "10px 16px",
+            borderTop: "1px solid var(--gray-200)",
+            display: "flex",
+            gap: "8px",
+            flexWrap: "wrap",
+          }}
+        >
+          {suggestions.map((s, i) => (
+            <button
+              key={i}
+              className="btn btn-outline"
+              onClick={() => setInput(s)}
+              style={{ fontSize: "12px", padding: "6px 10px" }}
+            >
+              {s}
             </button>
-          </div>
+          ))}
+        </div>
+
+        {/* Input */}
+        <div
+          style={{
+            padding: "12px",
+            borderTop: "1px solid var(--gray-200)",
+            display: "flex",
+            gap: "10px",
+          }}
+        >
+          <input
+            className="form-input"
+            placeholder="Ask AI about employees, sentiment, meetings..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          />
+
+          <button className="btn btn-primary" onClick={sendMessage}>
+            <Send size={16} />
+          </button>
         </div>
       </div>
     </div>
   );
 }
-
-/* Styles */
-
-const container = {
-  padding: 30
-};
-
-const chatBox = {
-  background: "white",
-  height: "400px",
-  overflowY: "auto",
-  padding: 20,
-  borderRadius: 12,
-  boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
-  display: "flex",
-  flexDirection: "column",
-  gap: 10
-};
-
-const bubble = {
-  padding: "10px 15px",
-  borderRadius: "15px",
-  maxWidth: "60%"
-};
-
-const inputBox = {
-  display: "flex",
-  marginTop: 15,
-  gap: 10
-};
-
-const inputStyle = {
-  flex: 1,
-  padding: 12,
-  borderRadius: 8,
-  border: "1px solid #cbd5f5"
-};
-
-const sendBtn = {
-  padding: "10px 20px",
-  background: "#2563eb",
-  color: "white",
-  border: "none",
-  borderRadius: 8
-};

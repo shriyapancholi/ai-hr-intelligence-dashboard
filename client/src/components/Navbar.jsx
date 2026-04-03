@@ -1,26 +1,65 @@
+import { useState } from "react";
+import { Search, Bell, ChevronDown, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 export default function Navbar() {
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+
+  const user =
+    JSON.parse(localStorage.getItem("hr_intel_user")) ||
+    { name: "Alex Thompson", role: "HR Director" };
+
+  const initials = user.name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
+
+  const logout = () => {
+    localStorage.removeItem("hr_intel_auth");
+    localStorage.removeItem("hr_intel_user");
+    navigate("/login");
+  };
+
   return (
-    <div style={nav}>
-      <h3>AI HR Dashboard</h3>
-      <button style={logout}>Logout</button>
-    </div>
+    <header className="navbar">
+      {/* Search */}
+      <div style={{ flex: 1, maxWidth: "520px" }}>
+        <div className="search-bar">
+          <Search size={16} />
+          <input
+            placeholder="Search analytics, employees..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Right side */}
+      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+        <button className="btn-icon">
+          <Bell size={18} />
+        </button>
+
+        <button className="btn btn-primary">
+          Generate Report
+        </button>
+
+        {/* Profile */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            cursor: "pointer",
+          }}
+          onClick={logout}
+        >
+          <div className="avatar avatar-sm">{initials}</div>
+          <ChevronDown size={14} />
+        </div>
+      </div>
+    </header>
   );
 }
-
-const nav = {
-  height: 60,
-  background: "white",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  padding: "0 20px",
-  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
-};
-
-const logout = {
-  background: "#ef4444",
-  color: "white",
-  border: "none",
-  padding: "8px 15px",
-  borderRadius: 6
-};
