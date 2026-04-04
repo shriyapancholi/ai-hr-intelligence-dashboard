@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   const user =
@@ -48,17 +49,41 @@ export default function Navbar() {
 
         {/* Profile */}
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            cursor: "pointer",
-          }}
-          onClick={logout}
-        >
-          <div className="avatar avatar-sm">{initials}</div>
-          <ChevronDown size={14} />
-        </div>
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    cursor: "pointer",
+    position: "relative"
+  }}
+  onClick={() => setOpen(!open)}
+>
+  <div className="avatar avatar-sm">{initials}</div>
+  <ChevronDown size={14} />
+
+  {open && (
+    <div
+      style={{
+        position: "absolute",
+        top: "40px",
+        right: 0,
+        background: "white",
+        border: "1px solid #eee",
+        borderRadius: "8px",
+        padding: "10px",
+        width: "150px"
+      }}
+    >
+      <div onClick={() => navigate("/profile")} style={{ padding: "5px", cursor: "pointer" }}>
+        Profile
+      </div>
+
+      <div onClick={logout} style={{ padding: "5px", cursor: "pointer", color: "red" }}>
+        Logout
+      </div>
+    </div>
+  )}
+</div>
       </div>
     </header>
   );
