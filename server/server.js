@@ -24,3 +24,6 @@ app.get("/", (req, res) => {
 
 const PORT = 5004;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const dashboardRoutes = require("./routes/dashboardRoutes");
+
+app.use("/api/dashboard", dashboardRoutes);
