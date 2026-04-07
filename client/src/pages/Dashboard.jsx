@@ -1,135 +1,97 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
 import {
-  Users,
-  Calendar,
-  Smile,
-  AlertTriangle,
-  ArrowUp,
-  ArrowDown,
-  Download,
-  Sparkles
-} from "lucide-react";
-
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell
 } from "recharts";
 
-const sentimentData = [
-  { month: "Jan", value: 6 },
-  { month: "Feb", value: 6.2 },
-  { month: "Mar", value: 7.5 },
-  { month: "Apr", value: 8.4 },
-  { month: "May", value: 7.8 },
-  { month: "Jun", value: 8.2 },
-];
-
-const deptData = [
-  { name: "Engineering", value: 42 },
-  { name: "Product", value: 28 },
-  { name: "Marketing", value: 18 },
-  { name: "Others", value: 12 },
-];
-
-const COLORS = ["#4F46E5", "#818CF8", "#94A3B8", "#CBD5F5"];
-
-const insights = [
-  {
-    title: "Engineering Burnout Risk",
-    tag: "HIGH PRIORITY",
-    color: "var(--danger)",
-    desc:
-      "High meeting density detected in the Backend Team. Collaborative overhead exceeded 35 hours per week per engineer.",
-  },
-  {
-    title: "Positive Sentiment Peak",
-    tag: "POSITIVE",
-    color: "var(--success)",
-    desc:
-      "Marketing team sentiment reached a 12-month high after the recent Spring Launch.",
-  },
-  {
-    title: "Transcript Summary Ready",
-    tag: "INFORMATION",
-    color: "var(--accent)",
-    desc:
-      "AI has summarized the Q4 Strategic Planning meeting. Action items extracted.",
-  },
-];
-
 export default function Dashboard() {
+  const [stats, setStats] = useState({
+    totalEmployees: 0,
+    meetingsThisMonth: 0,
+    avgSentiment: 0,
+    employeesAtRisk: 0,
+  });
+
+  const [trendData, setTrendData] = useState([]);
+  const [deptData, setDeptData] = useState([]);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const res = await axios.get("http://localhost:5004/api/dashboard");
+      setStats(res.data);
+
+      setTrendData([
+        { month: "Jan", value: 6 },
+        { month: "Feb", value: 6.2 },
+        { month: "Mar", value: 7.5 },
+        { month: "Apr", value: 8.4 },
+        { month: "May", value: 7.8 },
+        { month: "Jun", value: 8.2 },
+      ]);
+
+      setDeptData([
+        { name: "Engineering", value: 42 },
+        { name: "Product", value: 28 },
+        { name: "Marketing", value: 18 },
+        { name: "Others", value: 12 },
+      ]);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const COLORS = ["#4F46E5", "#6366F1", "#94A3B8", "#CBD5F5"];
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div className="p-6 bg-gray-100 min-h-screen">
 
-      {/* Page Header */}
-      <div className="page-header">
-        <div>
-          <h1>Intelligence Overview</h1>
-          <p>
-            Monitor organizational health and real-time AI-driven sentiment
-            markers.
-          </p>
-        </div>
+      {/* CENTER FIX */}
+      <div className="max-w-7xl mx-auto">
 
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button className="btn btn-outline">
-            <Download size={16} /> Download Report
-          </button>
-          <button className="btn btn-primary">
-            <Sparkles size={16} /> Generate AI Insights
-          </button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <Users size={18} />
-          <div style={{ fontSize: "28px", fontWeight: "700" }}>450</div>
-          <div className="text-muted">Total Employees</div>
-        </div>
-
-        <div className="stat-card">
-          <Calendar size={18} />
-          <div style={{ fontSize: "28px", fontWeight: "700" }}>124</div>
-          <div className="text-muted">Meetings This Month</div>
-        </div>
-
-        <div className="stat-card">
-          <Smile size={18} />
-          <div style={{ fontSize: "28px", fontWeight: "700" }}>8.2</div>
-          <div className="text-muted">Average Sentiment</div>
-        </div>
-
-        <div className="stat-card">
-          <AlertTriangle size={18} />
-          <div style={{ fontSize: "28px", fontWeight: "700" }}>12</div>
-          <div className="text-muted">Employees At Risk</div>
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="grid-2">
-        {/* Sentiment Chart */}
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <h3>Sentiment Trend</h3>
-              <p className="text-muted">
-                Monthly engagement fluctuations
-              </p>
-            </div>
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Intelligence Overview</h1>
+            <p className="text-gray-500">
+              Monitor organizational health and real-time AI insights
+            </p>
           </div>
 
-          <div style={{ height: "250px", padding: "10px 20px" }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={sentimentData}>
+          <div className="flex gap-3">
+            <button className="px-4 py-2 bg-gray-200 rounded-lg">
+              Download Report
+            </button>
+            <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg">
+              Generate AI Insights
+            </button>
+          </div>
+        </div>
+
+        {/* CARDS */}
+        <div className="grid grid-cols-4 gap-6 mb-8">
+          <Card title="Total Employees" value={stats.totalEmployees} />
+          <Card title="Meetings This Month" value={stats.meetingsThisMonth} />
+          <Card title="Average Sentiment" value={stats.avgSentiment} />
+          <Card title="Employees At Risk" value={stats.employeesAtRisk} />
+        </div>
+
+        {/* CHARTS */}
+        <div className="grid grid-cols-3 gap-6">
+
+          {/* AREA CHART */}
+          <div className="bg-white p-6 rounded-xl shadow col-span-2">
+            <h2 className="font-semibold">Sentiment Trend</h2>
+            <p className="text-gray-400 text-sm mb-3">
+              Monthly engagement fluctuations
+            </p>
+
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={trendData}>
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip />
@@ -137,101 +99,48 @@ export default function Dashboard() {
                   type="monotone"
                   dataKey="value"
                   stroke="#4F46E5"
-                  fill="#EEF2FF"
+                  fill="#C7D2FE"
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-        </div>
 
-        {/* Department Pie */}
-        <div className="card">
-          <div className="card-header">
-            <h3>By Department</h3>
-          </div>
+          {/* PIE */}
+          <div className="bg-white p-6 rounded-xl shadow">
+            <h2 className="font-semibold mb-4">By Department</h2>
 
-          <div style={{ height: "250px" }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={deptData}
-                  dataKey="value"
-                  innerRadius={60}
-                  outerRadius={80}
-                >
+            <div className="flex justify-center">
+              <PieChart width={200} height={200}>
+                <Pie data={deptData} dataKey="value" outerRadius={80}>
                   {deptData.map((entry, index) => (
                     <Cell key={index} fill={COLORS[index]} />
                   ))}
                 </Pie>
               </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div style={{ padding: "0 20px 20px" }}>
-            {deptData.map((d) => (
-              <div
-                key={d.name}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "6px",
-                }}
-              >
-                <span>{d.name}</span>
-                <span>{d.value}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Insights */}
-      <div className="card">
-        <div className="card-header">
-          <div>
-            <h3>Recent Insights</h3>
-            <p className="text-muted">
-              Automated intelligence summaries from the last 24 hours.
-            </p>
-          </div>
-        </div>
-
-        <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
-          {insights.map((item, i) => (
-            <div
-              key={i}
-              style={{
-                padding: "16px",
-                borderRadius: "12px",
-                border: "1px solid var(--gray-200)",
-                background: "var(--gray-50)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "6px",
-                }}
-              >
-                <strong>{item.title}</strong>
-                <span
-                  style={{
-                    fontSize: "11px",
-                    padding: "3px 8px",
-                    borderRadius: "999px",
-                    background: item.color,
-                    color: "#fff",
-                  }}
-                >
-                  {item.tag}
-                </span>
-              </div>
-              <div className="text-muted">{item.desc}</div>
             </div>
-          ))}
+
+            <div className="mt-4 text-sm">
+              {deptData.map((d, i) => (
+                <div key={i} className="flex justify-between">
+                  <span>{d.name}</span>
+                  <span>{d.value}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
+
       </div>
+    </div>
+  );
+}
+
+function Card({ title, value }) {
+  return (
+    <div className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition">
+      <p className="text-gray-500">{title}</p>
+      <h2 className="text-2xl font-bold mt-1">{value}</h2>
     </div>
   );
 }
