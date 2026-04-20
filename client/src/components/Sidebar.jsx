@@ -25,7 +25,7 @@ export default function Sidebar() {
     .toUpperCase();
 
   const logout = () => {
-    localStorage.removeItem("hr_intel_auth");
+    localStorage.removeItem("token");
     localStorage.removeItem("hr_intel_user");
     navigate("/login");
   };

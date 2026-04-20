@@ -16,7 +16,7 @@ import './index.css';
 
 /* Authentication Check */
 const isAuthenticated = () => {
-  return localStorage.getItem('hr_intel_auth') === 'true';
+  return !!localStorage.getItem('token');
 };
 
 /* Protected Layout */
