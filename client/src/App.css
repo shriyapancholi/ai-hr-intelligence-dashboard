@@ -188,3 +188,7 @@
 .card {
   padding: 20px 24px;
 }
+/* App-level overrides and Tailwind base layer */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

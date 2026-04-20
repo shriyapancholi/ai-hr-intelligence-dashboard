@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import API from "../services/api";
 
 export default function Register() {
     const navigate = useNavigate();
@@ -8,21 +9,21 @@ export default function Register() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleRegister = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
-
-        // Fake register
-        localStorage.setItem("hr_intel_auth", "true");
-        localStorage.setItem(
-            "hr_intel_user",
-            JSON.stringify({
-                name: name,
-                role: "HR Manager",
-            })
-        );
-
-        navigate("/");
+        setError("");
+        setLoading(true);
+        try {
+            await API.post("/auth/register", { name, email, password });
+            navigate("/login");
+        } catch (err) {
+            setError(err.response?.data?.message || err.response?.data || "Registration failed. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -56,6 +57,12 @@ export default function Register() {
                 <h3 style={{ marginBottom: "20px" }}>Create account</h3>
 
                 <form onSubmit={handleRegister}>
+                    {error && (
+                        <div style={{ marginBottom: "14px", color: "#dc2626", fontSize: "13px", background: "#fef2f2", padding: "8px 12px", borderRadius: "6px" }}>
+                            {error}
+                        </div>
+                    )}
+
                     <div style={{ marginBottom: "14px" }}>
                         <label>Full Name</label>
                         <input
@@ -63,16 +70,19 @@ export default function Register() {
                             placeholder="John Doe"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
+                            required
                         />
                     </div>
 
                     <div style={{ marginBottom: "14px" }}>
                         <label>Email</label>
                         <input
+                            type="email"
                             className="form-input"
                             placeholder="name@company.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            required
                         />
                     </div>
 
@@ -84,6 +94,7 @@ export default function Register() {
                             placeholder="********"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            required
                         />
                     </div>
 
@@ -91,8 +102,9 @@ export default function Register() {
                         type="submit"
                         className="btn btn-primary"
                         style={{ width: "100%", justifyContent: "center" }}
+                        disabled={loading}
                     >
-                        Create Account <ArrowRight size={16} />
+                        {loading ? "Creating account..." : <>{`Create Account`} <ArrowRight size={16} /></>}
                     </button>
                 </form>
 

@@ -1,27 +1,33 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import API from "../services/api";
 
 export default function Login() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-
-    // Fake auth
-    localStorage.setItem("hr_intel_auth", "true");
-    localStorage.setItem(
-      "hr_intel_user",
-      JSON.stringify({
-        name: "Alex Thompson",
-        role: "HR Director",
-      })
-    );
-
-    navigate("/");
+    setError("");
+    setLoading(true);
+    try {
+      const { data } = await API.post("/auth/login", { email, password });
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("hr_intel_user", JSON.stringify({
+        name: data.user.name,
+        role: "HR Manager",
+      }));
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -55,13 +61,21 @@ export default function Login() {
         <h3 style={{ marginBottom: "20px" }}>Sign in to your account</h3>
 
         <form onSubmit={handleLogin}>
+          {error && (
+            <div style={{ marginBottom: "14px", color: "#dc2626", fontSize: "13px", background: "#fef2f2", padding: "8px 12px", borderRadius: "6px" }}>
+              {error}
+            </div>
+          )}
+
           <div style={{ marginBottom: "14px" }}>
             <label>Email address</label>
             <input
               className="form-input"
+              type="email"
               placeholder="name@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
 
@@ -73,6 +87,7 @@ export default function Login() {
               placeholder="********"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </div>
 
@@ -80,8 +95,9 @@ export default function Login() {
             type="submit"
             className="btn btn-primary"
             style={{ width: "100%", justifyContent: "center" }}
+            disabled={loading}
           >
-            Sign in <ArrowRight size={16} />
+            {loading ? "Signing in..." : <>{`Sign in`} <ArrowRight size={16} /></>}
           </button>
         </form>
 

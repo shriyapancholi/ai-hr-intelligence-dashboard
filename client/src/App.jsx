@@ -8,6 +8,8 @@ import EmployeeProfile from './pages/EmployeeProfile';
 import Analytics from './pages/Analytics';
 import AIChat from './pages/AIChat';
 import Reminders from './pages/Reminders';
+import Meetings from './pages/Meetings';
+
 import UploadTranscript from './pages/UploadTranscript';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -17,7 +19,7 @@ import Meetings from './pages/meetings';
 import Settings from './pages/Settings';
 /* Authentication Check */
 const isAuthenticated = () => {
-  return localStorage.getItem('hr_intel_auth') === 'true';
+  return !!localStorage.getItem('token');
 };
 
 /* Protected Layout */
@@ -89,6 +91,15 @@ export default function App() {
           element={
             <ProtectedLayout>
               <EmployeeProfile />
+            </ProtectedLayout>
+          }
+        />
+
+        <Route
+          path="/meetings"
+          element={
+            <ProtectedLayout>
+              <Meetings />
             </ProtectedLayout>
           }
         />
