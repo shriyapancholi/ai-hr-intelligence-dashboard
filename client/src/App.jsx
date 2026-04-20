@@ -7,6 +7,7 @@ import Employees from './pages/Employees';
 import EmployeeProfile from './pages/EmployeeProfile';
 import Analytics from './pages/Analytics';
 import AIChat from './pages/AIChat';
+import Meetings from './pages/Meetings';
 import Reminders from './pages/reminders';
 import UploadTranscript from './pages/UploadTranscript';
 import Login from './pages/Login';
@@ -71,6 +72,15 @@ export default function App() {
           element={
             <ProtectedLayout>
               <EmployeeProfile />
+            </ProtectedLayout>
+          }
+        />
+
+        <Route
+          path="/meetings"
+          element={
+            <ProtectedLayout>
+              <Meetings />
             </ProtectedLayout>
           }
         />
