@@ -6,8 +6,12 @@ import {
   ArrowUp,
   ArrowDown,
   Download,
-  Sparkles
+  Sparkles,
+  FileText,
+  X
 } from "lucide-react";
+
+import { useState } from "react";
 
 import {
   AreaChart,
@@ -64,8 +68,156 @@ const insights = [
 ];
 
 export default function Dashboard() {
+  const [toast, setToast] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showInsightsModal, setShowInsightsModal] = useState(false);
+  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
+  const [generatedInsights, setGeneratedInsights] = useState(null);
+
+  const handleGenerateReport = () => {
+    setIsGenerating(true);
+    // Simulate generation time
+    setTimeout(() => {
+      const reportData = {
+        id: Date.now().toString(),
+        title: `HR Report - ${new Date().toLocaleString()}`,
+        timestamp: new Date().toISOString(),
+        kpi: {
+          totalEmployees: 450,
+          meetingsThisMonth: 124,
+          averageSentiment: 8.2,
+          employeesAtRisk: 12
+        },
+        sentimentData,
+        deptData,
+        insights
+      };
+
+      const existingReports = JSON.parse(localStorage.getItem("hr_reports") || "[]");
+      localStorage.setItem("hr_reports", JSON.stringify([reportData, ...existingReports]));
+
+      setIsGenerating(false);
+      setToast("Report Generated Successfully!");
+      setTimeout(() => setToast(null), 3000);
+    }, 1000);
+  };
+
+  const handleGenerateInsights = () => {
+    setIsGeneratingInsights(true);
+    setShowInsightsModal(true);
+    setGeneratedInsights(null);
+
+    // Simulate AI generation
+    setTimeout(() => {
+      setGeneratedInsights([
+        "Employee sentiment is steadily improving, specifically in Marketing after the Spring Launch.",
+        "Engineering team shows higher burnout risk due to a 20% increase in meeting density.",
+        "Product team engagement remains stable, with minor fluctuations.",
+        "Overall collaborative overhead has increased, suggesting a need for a \"no-meeting\" day."
+      ]);
+      setIsGeneratingInsights(false);
+    }, 1500);
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px", position: "relative" }}>
+      
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: "fixed",
+          top: "20px",
+          right: "20px",
+          background: "var(--success)",
+          color: "white",
+          padding: "12px 24px",
+          borderRadius: "8px",
+          boxShadow: "var(--shadow-md)",
+          zIndex: 1000,
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          animation: "fadeIn 0.3s ease"
+        }}>
+          <FileText size={18} />
+          <span style={{ fontWeight: 500 }}>{toast}</span>
+        </div>
+      )}
+
+      {/* AI Insights Modal */}
+      {showInsightsModal && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          zIndex: 1000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <div style={{
+            background: "white",
+            width: "500px",
+            maxWidth: "90%",
+            borderRadius: "var(--radius-lg)",
+            padding: "24px",
+            boxShadow: "var(--shadow-lg)"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h2 style={{ fontSize: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <Sparkles size={20} color="var(--primary)" /> API Insights
+              </h2>
+              <button 
+                onClick={() => setShowInsightsModal(false)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--gray-500)" }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {isGeneratingInsights ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 0", gap: "16px" }}>
+                <div style={{ 
+                  width: "30px", height: "30px", 
+                  border: "3px solid var(--gray-200)", 
+                  borderTopColor: "var(--primary)", 
+                  borderRadius: "50%", 
+                  animation: "spin 1s linear infinite" 
+                }} />
+                <p className="text-muted">Analyzing organizational data...</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {generatedInsights?.map((insight, index) => (
+                  <div key={index} style={{
+                    padding: "16px",
+                    background: "var(--primary-light)",
+                    borderLeft: "4px solid var(--primary)",
+                    borderRadius: "4px 8px 8px 4px",
+                    color: "var(--gray-800)"
+                  }}>
+                    {insight}
+                  </div>
+                ))}
+                <button 
+                  onClick={() => setShowInsightsModal(false)}
+                  className="btn btn-primary" 
+                  style={{ width: "100%", marginTop: "12px", justifyContent: "center" }}
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Inline styles for simple animations */}
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
+
 
       {/* Page Header */}
       <div className="page-header">
@@ -78,10 +230,21 @@ export default function Dashboard() {
         </div>
 
         <div style={{ display: "flex", gap: "10px" }}>
-          <button className="btn btn-outline">
-            <Download size={16} /> Download Report
+          <button 
+            className="btn btn-outline" 
+            onClick={handleGenerateReport}
+            disabled={isGenerating}
+          >
+            {isGenerating ? (
+              <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <div style={{ width: "14px", height: "14px", border: "2px solid #ccc", borderTopColor: "var(--primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                Generating...
+              </span>
+            ) : (
+              <><FileText size={16} /> Generate Report</>
+            )}
           </button>
-          <button className="btn btn-primary">
+          <button className="btn btn-primary" onClick={handleGenerateInsights}>
             <Sparkles size={16} /> Generate AI Insights
           </button>
         </div>

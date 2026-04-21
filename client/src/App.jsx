@@ -13,6 +13,7 @@ import Meetings from './pages/Meetings';
 import UploadTranscript from './pages/UploadTranscript';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import GeneratedReports from './pages/GeneratedReports';
 
 import './index.css';
 import Meetings from './pages/meetings';
@@ -118,6 +119,15 @@ export default function App() {
           element={
             <ProtectedLayout>
               <AIChat />
+            </ProtectedLayout>
+          }
+        />
+
+        <Route
+          path="/reports"
+          element={
+            <ProtectedLayout>
+              <GeneratedReports />
             </ProtectedLayout>
           }
         />

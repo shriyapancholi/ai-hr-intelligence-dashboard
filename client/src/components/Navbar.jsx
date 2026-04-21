@@ -43,10 +43,6 @@ export default function Navbar() {
           <Bell size={18} />
         </button>
 
-        <button className="btn btn-primary">
-          Generate Report
-        </button>
-
         {/* Profile */}
         <div
   style={{

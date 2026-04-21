@@ -86,6 +86,10 @@ export default function Sidebar() {
           <Bot size={17} /> AI Assistant
         </NavLink>
 
+        <NavLink to="/reports" className="nav-item">
+          <FileText size={17} /> Generated Reports
+        </NavLink>
+
         <NavLink to="/reminders" className="nav-item">
           <Bell size={17} /> Reminders
         </NavLink>
