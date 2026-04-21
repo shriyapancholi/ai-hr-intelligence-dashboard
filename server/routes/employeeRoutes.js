@@ -1,10 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const employeeController = require("../controllers/employeeController");
-const auth = require("../middleware/auth");
 
-router.get("/", auth, employeeController.getEmployees);
-router.get("/:id", auth, employeeController.getEmployeeById);
-router.post("/", auth, employeeController.createEmployee);
+const {
+  getEmployees,
+  getEmployeeById,
+  createEmployee,
+  searchEmployees
+} = require("../controllers/employeeController");
+
+router.get("/", getEmployees);
+router.get("/search", searchEmployees);   // 🔥 IMPORTANT
+router.get("/:id", getEmployeeById);
+router.post("/", createEmployee);         // (no /add needed)
 
 module.exports = router;

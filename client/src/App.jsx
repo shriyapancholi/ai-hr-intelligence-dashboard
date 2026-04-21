@@ -1,26 +1,26 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
-import Navbar from './components/Navbar';
 
-import Dashboard from './pages/Dashboard';
-import Employees from './pages/Employees';
-import EmployeeProfile from './pages/EmployeeProfile';
-import Analytics from './pages/Analytics';
-import AIChat from './pages/AIChat';
-import Reminders from './pages/Reminders';
-import Meetings from './pages/Meetings';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Sidebar from "./components/Sidebar";
+import Navbar from "./components/Navbar";
 
-import UploadTranscript from './pages/UploadTranscript';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import GeneratedReports from './pages/GeneratedReports';
+import Dashboard from "./pages/Dashboard";
+import Employees from "./pages/Employees";
+import EmployeeProfile from "./pages/EmployeeProfile";
+import Analytics from "./pages/Analytics";
+import AIChat from "./pages/AIChat";
+import Reminders from "./pages/Reminders";
+import UploadTranscript from "./pages/UploadTranscript";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import GeneratedReports from "./pages/GeneratedReports";
+import Meetings from "./pages/meetings";
+import Settings from "./pages/Settings";
 
-import './index.css';
-import Meetings from './pages/meetings';
-import Settings from './pages/Settings';
+import "./index.css";
+
 /* Authentication Check */
 const isAuthenticated = () => {
-  return !!localStorage.getItem('token');
+  return !!localStorage.getItem("token");
 };
 
 /* Protected Layout */
@@ -34,47 +34,32 @@ function ProtectedLayout({ children }) {
       <Sidebar />
       <div className="main-content">
         <Navbar />
-        <main className="page-content">
-          {children}
-        </main>
+        <main className="page-content">{children}</main>
       </div>
     </div>
   );
 }
 
-/* App Routes */
+/* App */
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+
+        {/* Default Route */}
+        <Route path="/" element={<Navigate to="/dashboard" />} />
+
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         {/* Protected Routes */}
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <ProtectedLayout>
               <Dashboard />
             </ProtectedLayout>
-          }
-        />
-        <Route
-           path="/meetings"
-          element={
-            <ProtectedLayout>
-             <Meetings />
-            </ProtectedLayout>
-          }
-       />
-
-        <Route
-          path="/settings"
-          element={
-             <ProtectedLayout>
-              <Settings />
-              </ProtectedLayout>
           }
         />
 
@@ -150,8 +135,18 @@ export default function App() {
           }
         />
 
-        {/* Default Route */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedLayout>
+              <Settings />
+            </ProtectedLayout>
+          }
+        />
+
+        {/* Fallback Route */}
+        <Route path="*" element={<Navigate to="/dashboard" />} />
+
       </Routes>
     </BrowserRouter>
   );
