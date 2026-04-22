@@ -257,7 +257,7 @@ export default function Meetings() {
   const fetchMeetings = async () => {
     try {
       setLoading(true);
-      const { data } = await API.get("/meetings");
+      const { data } = await API.get("meetings");
       setMeetings(data);
     } catch (err) {
       console.error("Failed to fetch meetings", err);
@@ -281,7 +281,7 @@ export default function Meetings() {
         generateLink: form.generateLink,
         meetingLink: form.generateLink ? "" : form.meetingLink,
       };
-      const { data } = await API.post("/meetings", payload);
+      const { data } = await API.post("meetings", payload);
       setMeetings((prev) => [data, ...prev]);
       setOpenPanel(false);
       setForm({ title: "", datetime: "", participants: "", generateLink: true, meetingLink: "" });

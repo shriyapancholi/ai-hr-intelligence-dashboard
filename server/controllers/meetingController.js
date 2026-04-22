@@ -1,7 +1,15 @@
 const Meeting = require("../models/Meeting");
 const { createGoogleMeetLink } = require("../services/googleMeet");
 
-// Shared error handler for Google credential errors
+function isValidHttpUrl(string) {
+  try {
+    const url = new URL(string);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function handleGoogleError(err, res) {
   if (err.code === "GOOGLE_CREDENTIALS_MISSING") {
     return res.status(503).json({
@@ -9,8 +17,7 @@ function handleGoogleError(err, res) {
       setup: "See server/.env.example for required GOOGLE_* variables.",
     });
   }
-  console.error("Google Calendar API error:", err.message);
-  res.status(500).json({ message: err.message });
+  res.status(500).json({ message: "Google Calendar API error" });
 }
 
 // GET /api/meetings
@@ -19,7 +26,7 @@ exports.getMeetings = async (req, res) => {
     const meetings = await Meeting.find().sort({ datetime: 1 });
     res.json(meetings);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "Failed to fetch meetings" });
   }
 };
 
@@ -32,15 +39,15 @@ exports.createMeeting = async (req, res) => {
       return res.status(400).json({ message: "Title and datetime are required" });
     }
 
+    if (!req.user?.id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     let link = meetingLink || "";
     let calendarEventId = "";
 
     if (generateLink) {
-      const result = await createGoogleMeetLink(
-        title,
-        datetime,
-        participants || []
-      );
+      const result = await createGoogleMeetLink(title, datetime, participants || []);
       link = result.link;
       calendarEventId = result.calendarEventId;
     }
@@ -51,18 +58,17 @@ exports.createMeeting = async (req, res) => {
       participants: participants || [],
       meetingLink: link,
       calendarEventId,
-      createdBy: req.user?.id || "unknown",
+      createdBy: req.user.id,
     });
 
     res.status(201).json(meeting);
   } catch (err) {
     if (err.code === "GOOGLE_CREDENTIALS_MISSING") return handleGoogleError(err, res);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "Failed to create meeting" });
   }
 };
 
 // POST /api/meetings/:id/generate-link
-// Creates a real Google Meet event for an existing meeting that has no link yet
 exports.generateMeetingLink = async (req, res) => {
   try {
     const meeting = await Meeting.findById(req.params.id);
@@ -81,14 +87,19 @@ exports.generateMeetingLink = async (req, res) => {
     res.json(meeting);
   } catch (err) {
     if (err.code === "GOOGLE_CREDENTIALS_MISSING") return handleGoogleError(err, res);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "Failed to generate meeting link" });
   }
 };
 
-// PATCH /api/meetings/:id/link — manually set a link
+// PATCH /api/meetings/:id/link
 exports.updateMeetingLink = async (req, res) => {
   try {
     const { link } = req.body;
+
+    if (!link || !isValidHttpUrl(link)) {
+      return res.status(400).json({ message: "A valid URL is required" });
+    }
+
     const meeting = await Meeting.findByIdAndUpdate(
       req.params.id,
       { meetingLink: link },
@@ -97,6 +108,6 @@ exports.updateMeetingLink = async (req, res) => {
     if (!meeting) return res.status(404).json({ message: "Meeting not found" });
     res.json(meeting);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "Failed to update meeting link" });
   }
 };

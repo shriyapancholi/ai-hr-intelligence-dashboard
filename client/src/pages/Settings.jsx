@@ -2,42 +2,35 @@ import { useState, useEffect } from "react";
 
 export default function Settings() {
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [darkMode, setDarkMode] = useState(false);
   const [emailNotif, setEmailNotif] = useState(true);
   const [aiNotif, setAiNotif] = useState(true);
+  const [saved, setSaved] = useState(false);
 
-  // Load saved settings
   useEffect(() => {
-    const savedName = localStorage.getItem("user_name") || "Alex Thompson";
+    const user = JSON.parse(localStorage.getItem("hr_intel_user") || "{}");
+    setName(user.name || "");
+    setEmail(user.email || "");
     const savedDark = localStorage.getItem("dark_mode") === "true";
-
-    setName(savedName);
     setDarkMode(savedDark);
   }, []);
 
-  // Apply dark mode
   useEffect(() => {
-    if (darkMode) {
-      document.body.style.background = "#0f172a";
-      document.body.style.color = "#fff";
-    } else {
-      document.body.style.background = "";
-      document.body.style.color = "";
-    }
+    document.body.style.background = darkMode ? "#0f172a" : "";
+    document.body.style.color = darkMode ? "#fff" : "";
   }, [darkMode]);
 
-  // Save settings
   const handleSave = () => {
-    localStorage.setItem("user_name", name);
+    const user = JSON.parse(localStorage.getItem("hr_intel_user") || "{}");
+    localStorage.setItem("hr_intel_user", JSON.stringify({ ...user, name }));
     localStorage.setItem("dark_mode", darkMode);
-
-    alert("Settings saved successfully!");
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-
-      {/* Header */}
       <div className="page-header">
         <div>
           <h1>Settings</h1>
@@ -45,93 +38,55 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Profile */}
       <div className="card">
-        <div className="card-header">
-          <h3>Profile</h3>
-        </div>
-
-        <div style={{ padding: "20px" }}>
-          <div className="text-muted">Name</div>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            style={{
-              marginTop: "6px",
-              padding: "8px",
-              width: "100%",
-              borderRadius: "6px",
-              border: "1px solid var(--gray-300)"
-            }}
-          />
+        <div className="card-header"><h3>Profile</h3></div>
+        <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div>
+            <div className="text-muted" style={{ marginBottom: "6px" }}>Name</div>
+            <input className="form-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+          </div>
+          {email && (
+            <div>
+              <div className="text-muted" style={{ marginBottom: "6px" }}>Email</div>
+              <input className="form-input" value={email} disabled style={{ background: "var(--gray-50)", color: "var(--gray-500)" }} />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Preferences */}
       <div className="card">
-        <div className="card-header">
-          <h3>Preferences</h3>
-        </div>
-
+        <div className="card-header"><h3>Preferences</h3></div>
         <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
-
-          {/* Dark Mode */}
           <label style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>Dark Mode 🌙</span>
-            <input
-              type="checkbox"
-              checked={darkMode}
-              onChange={() => setDarkMode(!darkMode)}
-            />
+            <span>Dark Mode</span>
+            <input type="checkbox" checked={darkMode} onChange={() => setDarkMode(!darkMode)} />
           </label>
-
-          {/* Notifications */}
           <label style={{ display: "flex", justifyContent: "space-between" }}>
             <span>Email Alerts</span>
-            <input
-              type="checkbox"
-              checked={emailNotif}
-              onChange={() => setEmailNotif(!emailNotif)}
-            />
+            <input type="checkbox" checked={emailNotif} onChange={() => setEmailNotif(!emailNotif)} />
           </label>
-
           <label style={{ display: "flex", justifyContent: "space-between" }}>
             <span>AI Insights Alerts</span>
-            <input
-              type="checkbox"
-              checked={aiNotif}
-              onChange={() => setAiNotif(!aiNotif)}
-            />
+            <input type="checkbox" checked={aiNotif} onChange={() => setAiNotif(!aiNotif)} />
           </label>
-
         </div>
       </div>
 
-      {/* Integrations */}
       <div className="card">
-        <div className="card-header">
-          <h3>Integrations</h3>
-        </div>
-
+        <div className="card-header"><h3>Integrations</h3></div>
         <div style={{ padding: "20px", display: "flex", justifyContent: "space-between" }}>
           <span>Zoho HRMS</span>
-          <span style={{ color: "var(--success)", fontWeight: "600" }}>
-            Connected
-          </span>
+          <span style={{ color: "var(--gray-400)" }}>Not connected</span>
         </div>
-
         <div style={{ padding: "0 20px 20px", display: "flex", justifyContent: "space-between" }}>
           <span>Slack</span>
           <button className="btn btn-outline">Connect</button>
         </div>
       </div>
 
-      {/* Save Button */}
-      <button className="btn btn-primary" onClick={handleSave}>
-        Save Settings
+      <button className="btn btn-primary" onClick={handleSave} style={{ alignSelf: "flex-start" }}>
+        {saved ? "Saved!" : "Save Settings"}
       </button>
-
     </div>
   );
 }
-

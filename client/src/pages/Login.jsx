@@ -16,7 +16,7 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      const { data } = await API.post("/auth/login", { email, password });
+      const { data } = await API.post("auth/login", { email, password });
       localStorage.setItem("token", data.token);
       localStorage.setItem("hr_intel_user", JSON.stringify({
         name: data.user.name,
