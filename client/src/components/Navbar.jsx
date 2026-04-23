@@ -83,10 +83,10 @@ function AIChatContext() {
     <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#F0FDF4", borderRadius: "999px", padding: "5px 14px", fontSize: "13px", color: "#16A34A", fontWeight: 600 }}>
         <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#16A34A" }} />
-        <Cpu size={14} /> Claude AI — Online
+        <Cpu size={14} /> GPT-4o Mini — Online
       </div>
       <div style={{ fontSize: "12px", color: "var(--gray-400)" }}>
-        Powered by claude-haiku-4-5
+        Powered by gpt-4o-mini
       </div>
     </div>
   );
