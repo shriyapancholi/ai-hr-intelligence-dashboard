@@ -1,21 +1,50 @@
+const OpenAI = require("openai");
 const Anthropic = require("@anthropic-ai/sdk");
 const Employee = require("../models/Employee");
 const Meeting = require("../models/Meeting");
 const Transcript = require("../models/Transcript");
 
-function getClient() {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    throw new Error("ANTHROPIC_API_KEY is not configured");
+/* ── pick whichever key is configured ── */
+function getProvider() {
+  if (process.env.OPENAI_API_KEY) {
+    return { type: "openai", client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) };
   }
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  if (process.env.ANTHROPIC_API_KEY) {
+    return { type: "anthropic", client: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) };
+  }
+  throw new Error("No AI key configured. Add OPENAI_API_KEY or ANTHROPIC_API_KEY to .env");
 }
 
+async function callAI(systemPrompt, userMessage) {
+  const { type, client } = getProvider();
+
+  if (type === "openai") {
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_tokens: 800,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ],
+    });
+    return response.choices[0].message.content;
+  }
+
+  // anthropic
+  const response = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 800,
+    system: systemPrompt,
+    messages: [{ role: "user", content: userMessage }],
+  });
+  return response.content[0].text;
+}
+
+/* ── POST /api/ai/chat ── */
 exports.chat = async (req, res) => {
   try {
     const { message } = req.body;
     if (!message) return res.status(400).json({ message: "Message is required" });
-
-    const client = getClient();
 
     const [employees, meetings, transcripts] = await Promise.all([
       Employee.find({}, "name department role sentimentScore").limit(50),
@@ -23,7 +52,7 @@ exports.chat = async (req, res) => {
       Transcript.find({}, "employeeId sentiment summary meetingDate").sort({ meetingDate: -1 }).limit(20),
     ]);
 
-    const context = `
+    const systemPrompt = `
 You are an AI HR Intelligence assistant. Here is the current HR data:
 
 EMPLOYEES (${employees.length} total):
@@ -38,57 +67,48 @@ ${transcripts.map((t) => `- Sentiment: ${t.sentiment || "N/A"}, Summary: ${t.sum
 Answer the HR manager's question concisely and helpfully based on this data.
     `.trim();
 
-    const response = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 500,
-      system: context,
-      messages: [{ role: "user", content: message }],
-    });
-
-    res.json({ reply: response.content[0].text });
+    const reply = await callAI(systemPrompt, message);
+    res.json({ reply });
   } catch (err) {
-    if (err.message.includes("ANTHROPIC_API_KEY")) {
-      return res.status(503).json({ reply: "AI assistant is not configured. Please add ANTHROPIC_API_KEY to your .env file." });
-    }
-    res.status(500).json({ reply: "AI assistant is temporarily unavailable." });
+    console.error("[AI chat]", err.message);
+    res.status(503).json({ reply: "AI assistant is temporarily unavailable. Check your API key in .env." });
   }
 };
 
+/* ── POST /api/ai/analyze ── */
 exports.analyzeTranscript = async (req, res) => {
   try {
     const { transcriptText } = req.body;
     if (!transcriptText) return res.status(400).json({ message: "Transcript text is required" });
 
-    const client = getClient();
+    const systemPrompt = `You are a senior HR analyst specializing in employee wellbeing and engagement assessment. Return only valid JSON — no markdown, no extra text.`;
 
-    const response = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 800,
-      messages: [
-        {
-          role: "user",
-          content: `Analyze this HR meeting transcript and return a JSON object with these exact fields:
+    const userMessage = `Analyze this HR meeting transcript from an employee wellbeing perspective and return a JSON object with exactly these fields:
 {
   "sentiment": "Positive" | "Neutral" | "Negative",
-  "summary": "2-3 sentence summary",
+  "summary": "2-3 sentence summary focusing on employee wellbeing and work dynamics",
   "topics": ["topic1", "topic2", "topic3"],
   "suggestedActions": ["action1", "action2"]
 }
 
+Sentiment classification rules (HR context):
+- "Negative": employee shows signs of stress, frustration, burnout, disengagement, unresolved conflicts, workload issues, missed deadlines causing pressure, feeling unsupported, or communication breakdowns. Even if the employee is polite or willing to improve, underlying problems make it Negative.
+- "Neutral": routine factual update, no strong signals either way, minor issues acknowledged and resolved, balanced feedback.
+- "Positive": employee shows enthusiasm, feels supported, reports achievements, strong collaboration, growth mindset with no underlying stress signals.
+
+When in doubt between Neutral and Negative, choose Negative if there are unresolved problems, delays, or employee stress signals present.
+
 Transcript:
-${transcriptText}
+${transcriptText}`;
 
-Return only valid JSON, no other text.`,
-        },
-      ],
-    });
+    const raw = await callAI(systemPrompt, userMessage);
 
-    const parsed = JSON.parse(response.content[0].text);
+    // strip any accidental markdown fences
+    const clean = raw.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
+    const parsed = JSON.parse(clean);
     res.json(parsed);
   } catch (err) {
-    if (err.message.includes("ANTHROPIC_API_KEY")) {
-      return res.status(503).json({ message: "AI analysis not configured. Add ANTHROPIC_API_KEY to .env." });
-    }
-    res.status(500).json({ message: "AI analysis failed" });
+    console.error("[AI analyze]", err.message);
+    res.status(500).json({ message: "AI analysis failed. Check your API key in .env." });
   }
 };

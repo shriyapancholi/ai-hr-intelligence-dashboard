@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Video,
   Users,
@@ -9,20 +10,25 @@ import {
   X,
   Check,
   Calendar,
+  FileText,
+  ArrowRight,
 } from "lucide-react";
 import API from "../services/api";
 
 /* ─── helpers ──────────────────────────────────────── */
 
-function getStatus(datetime) {
-  const diffMins = (new Date(datetime) - new Date()) / 60000;
+function getStatus(meeting) {
+  if (meeting.status) return meeting.status;
+  const diffMins = (new Date(meeting.datetime) - new Date()) / 60000;
   if (diffMins > 5) return "upcoming";
   if (diffMins >= -60) return "ongoing";
   return "completed";
 }
 
-function getTimeLabel(datetime) {
-  const diffMins = Math.round((new Date(datetime) - new Date()) / 60000);
+function getTimeLabel(meeting) {
+  if (meeting.status === "completed") return null;
+  const diffMins = Math.round((new Date(meeting.datetime) - new Date()) / 60000);
+  if (meeting.status === "ongoing") return `Live Now`;
   if (diffMins > 0) return `Starts in ${diffMins}m`;
   if (diffMins >= -60) return `Started ${Math.abs(diffMins)}m ago`;
   return null;
@@ -83,9 +89,93 @@ function StatCard({ icon, label, value, bg, live }) {
 
 /* ─── meeting card ──────────────────────────────────── */
 
-function MeetingCard({ meeting, copiedId, addLinkId, manualLink, generatingId, onCopy, onGenerate, onSetAddLink, onLinkChange, onSaveLink }) {
-  const status = getStatus(meeting.datetime);
-  const timeLabel = getTimeLabel(meeting.datetime);
+/* ─── transcript prompt modal ───────────────────────── */
+
+function TranscriptPromptModal({ meeting, onConfirm, onDismiss, onGoToTranscripts }) {
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, background: "rgba(15,23,42,0.45)",
+        zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center",
+      }}
+      onClick={onDismiss}
+    >
+      <div
+        style={{
+          background: "white", borderRadius: "16px", padding: "32px 28px",
+          width: "440px", maxWidth: "90vw", boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Icon */}
+        <div style={{
+          width: "52px", height: "52px", borderRadius: "14px",
+          background: "#EEF2FF", display: "flex", alignItems: "center",
+          justifyContent: "center", marginBottom: "18px",
+        }}>
+          <FileText size={24} color="#4F46E5" />
+        </div>
+
+        <h3 style={{ margin: "0 0 8px", fontSize: "18px", fontWeight: "700", color: "#0F172A" }}>
+          Meeting Completed
+        </h3>
+        <p style={{ margin: "0 0 6px", fontWeight: "600", color: "#1E293B" }}>
+          {meeting.title}
+        </p>
+        <p style={{ margin: "0 0 24px", fontSize: "14px", color: "#64748B", lineHeight: "1.5" }}>
+          Do you have a transcript from this meeting? Upload it to get AI-powered sentiment analysis and insights.
+        </p>
+
+        {/* Actions */}
+        <button
+          onClick={onGoToTranscripts}
+          style={{
+            width: "100%", padding: "12px", borderRadius: "10px",
+            background: "#4F46E5", color: "white", border: "none",
+            fontWeight: "600", fontSize: "15px", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+            marginBottom: "10px",
+          }}
+        >
+          <FileText size={16} /> Upload Transcript <ArrowRight size={16} />
+        </button>
+
+        <button
+          onClick={onConfirm}
+          style={{
+            width: "100%", padding: "11px", borderRadius: "10px",
+            background: "white", color: "#64748B",
+            border: "1px solid #E2E8F0", fontWeight: "500", fontSize: "14px",
+            cursor: "pointer",
+          }}
+        >
+          Skip, just mark as completed
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── status next options ────────────────────────────── */
+
+const STATUS_NEXT = {
+  upcoming: [
+    { value: "ongoing", label: "Mark Ongoing", color: "#16A34A", bg: "#DCFCE7" },
+    { value: "completed", label: "Mark Completed", color: "#64748B", bg: "#F1F5F9" },
+  ],
+  ongoing: [
+    { value: "completed", label: "Mark Completed", color: "#64748B", bg: "#F1F5F9" },
+    { value: "upcoming", label: "Mark Upcoming", color: "#4F46E5", bg: "#EEF2FF" },
+  ],
+  completed: [
+    { value: "upcoming", label: "Reopen", color: "#4F46E5", bg: "#EEF2FF" },
+    { value: "ongoing", label: "Mark Ongoing", color: "#16A34A", bg: "#DCFCE7" },
+  ],
+};
+
+function MeetingCard({ meeting, copiedId, addLinkId, manualLink, generatingId, updatingStatusId, onCopy, onGenerate, onSetAddLink, onLinkChange, onSaveLink, onStatusChange }) {
+  const status = getStatus(meeting);
+  const timeLabel = getTimeLabel(meeting);
   const hasLink = !!meeting.meetingLink;
 
   const statusMap = {
@@ -152,35 +242,18 @@ function MeetingCard({ meeting, copiedId, addLinkId, manualLink, generatingId, o
                   onChange={(e) => onLinkChange(e.target.value)}
                   style={{ flex: 1, margin: 0 }}
                 />
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => onSaveLink(meeting._id)}
-                >
-                  Save
-                </button>
-                <button
-                  className="btn btn-outline btn-sm"
-                  onClick={() => onSetAddLink(null)}
-                >
-                  <X size={12} />
-                </button>
+                <button className="btn btn-primary btn-sm" onClick={() => onSaveLink(meeting._id)}>Save</button>
+                <button className="btn btn-outline btn-sm" onClick={() => onSetAddLink(null)}><X size={12} /></button>
               </div>
             )}
           </div>
         </div>
 
         {/* Right */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: "10px",
-            flexShrink: 0,
-          }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px", flexShrink: 0 }}>
           <span className={`badge ${cls}`}>{statusLabel}</span>
 
+          {/* Meet link actions */}
           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "flex-end" }}>
             {hasLink ? (
               <>
@@ -222,6 +295,31 @@ function MeetingCard({ meeting, copiedId, addLinkId, manualLink, generatingId, o
               </>
             )}
           </div>
+
+          {/* Status change pills */}
+          <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {STATUS_NEXT[status].map((opt) => (
+              <button
+                key={opt.value}
+                disabled={updatingStatusId === meeting._id}
+                onClick={() => onStatusChange(meeting._id, opt.value)}
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  padding: "3px 9px",
+                  borderRadius: "20px",
+                  border: `1px solid ${opt.color}`,
+                  background: opt.bg,
+                  color: opt.color,
+                  cursor: "pointer",
+                  opacity: updatingStatusId === meeting._id ? 0.5 : 1,
+                  lineHeight: "1.5",
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -231,6 +329,7 @@ function MeetingCard({ meeting, copiedId, addLinkId, manualLink, generatingId, o
 /* ─── main page ──────────────────────────────────────── */
 
 export default function Meetings() {
+  const navigate = useNavigate();
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openPanel, setOpenPanel] = useState(false);
@@ -241,6 +340,8 @@ export default function Meetings() {
   const [formError, setFormError] = useState("");
   const [generatingId, setGeneratingId] = useState(null);
   const [generateError, setGenerateError] = useState("");
+  const [updatingStatusId, setUpdatingStatusId] = useState(null);
+  const [transcriptPrompt, setTranscriptPrompt] = useState(null); // meeting object when modal is open
 
   const [form, setForm] = useState({
     title: "",
@@ -318,6 +419,38 @@ export default function Meetings() {
     }
   };
 
+  const applyStatusChange = async (meetingId, newStatus) => {
+    setUpdatingStatusId(meetingId);
+    try {
+      const { data } = await API.patch(`/meetings/${meetingId}/status`, { status: newStatus });
+      setMeetings((prev) => prev.map((m) => (m._id === data._id ? data : m)));
+    } catch (err) {
+      console.error("Failed to update status", err);
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+  const handleStatusChange = (meetingId, newStatus) => {
+    if (newStatus === "completed") {
+      const meeting = meetings.find((m) => m._id === meetingId);
+      setTranscriptPrompt(meeting);
+    } else {
+      applyStatusChange(meetingId, newStatus);
+    }
+  };
+
+  const handleTranscriptPromptConfirm = () => {
+    if (transcriptPrompt) applyStatusChange(transcriptPrompt._id, "completed");
+    setTranscriptPrompt(null);
+  };
+
+  const handleTranscriptPromptGoUpload = () => {
+    if (transcriptPrompt) applyStatusChange(transcriptPrompt._id, "completed");
+    setTranscriptPrompt(null);
+    navigate("/upload-transcript");
+  };
+
   const handleCopy = (link, id) => {
     navigator.clipboard.writeText(link);
     setCopiedId(id);
@@ -325,12 +458,21 @@ export default function Meetings() {
   };
 
   const counts = meetings.reduce(
-    (acc, m) => { acc[getStatus(m.datetime)]++; return acc; },
+    (acc, m) => { acc[getStatus(m)]++; return acc; },
     { upcoming: 0, ongoing: 0, completed: 0 }
   );
 
   return (
     <div style={{ display: "flex" }}>
+      {transcriptPrompt && (
+        <TranscriptPromptModal
+          meeting={transcriptPrompt}
+          onConfirm={handleTranscriptPromptConfirm}
+          onDismiss={() => setTranscriptPrompt(null)}
+          onGoToTranscripts={handleTranscriptPromptGoUpload}
+        />
+      )}
+
       {/* ── Main content ── */}
       <div style={{ flex: 1, paddingRight: openPanel ? "400px" : "0", transition: "padding 0.2s" }}>
 
@@ -439,11 +581,13 @@ export default function Meetings() {
                   addLinkId={addLinkId}
                   manualLink={manualLink}
                   generatingId={generatingId}
+                  updatingStatusId={updatingStatusId}
                   onCopy={handleCopy}
                   onGenerate={handleGenerate}
                   onSetAddLink={setAddLinkId}
                   onLinkChange={setManualLink}
                   onSaveLink={handleSaveManualLink}
+                  onStatusChange={handleStatusChange}
                 />
               ))}
             </div>

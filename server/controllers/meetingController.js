@@ -1,5 +1,6 @@
 const Meeting = require("../models/Meeting");
 const { createGoogleMeetLink } = require("../services/googleMeet");
+const { sendMeetingInvite } = require("../services/emailService");
 
 function isValidHttpUrl(string) {
   try {
@@ -47,9 +48,14 @@ exports.createMeeting = async (req, res) => {
     let calendarEventId = "";
 
     if (generateLink) {
-      const result = await createGoogleMeetLink(title, datetime, participants || []);
-      link = result.link;
-      calendarEventId = result.calendarEventId;
+      try {
+        const result = await createGoogleMeetLink(title, datetime, participants || []);
+        link = result.link;
+        calendarEventId = result.calendarEventId;
+      } catch (googleErr) {
+        if (googleErr.code !== "GOOGLE_CREDENTIALS_MISSING") throw googleErr;
+        // Proceed without Meet link — email will still be sent without one
+      }
     }
 
     const meeting = await Meeting.create({
@@ -61,9 +67,17 @@ exports.createMeeting = async (req, res) => {
       createdBy: req.user.id,
     });
 
+    // Always send email invite — fires immediately regardless of Meet link
+    sendMeetingInvite({
+      title,
+      datetime,
+      meetingLink: link,
+      participants: participants || [],
+    }).then(() => console.log("[EMAIL] Invite sent for:", title))
+      .catch((e) => console.error("[EMAIL] Failed to send invite:", e.message));
+
     res.status(201).json(meeting);
   } catch (err) {
-    if (err.code === "GOOGLE_CREDENTIALS_MISSING") return handleGoogleError(err, res);
     res.status(500).json({ message: "Failed to create meeting" });
   }
 };
@@ -84,10 +98,37 @@ exports.generateMeetingLink = async (req, res) => {
     meeting.calendarEventId = calendarEventId;
     await meeting.save();
 
+    sendMeetingInvite({
+      title: meeting.title,
+      datetime: meeting.datetime,
+      meetingLink: link,
+      participants: meeting.participants,
+    }).then(() => console.log("[EMAIL] Invite sent for:", meeting.title))
+      .catch((e) => console.error("[EMAIL] Failed to send invite:", e.message));
+
     res.json(meeting);
   } catch (err) {
     if (err.code === "GOOGLE_CREDENTIALS_MISSING") return handleGoogleError(err, res);
     res.status(500).json({ message: "Failed to generate meeting link" });
+  }
+};
+
+// PATCH /api/meetings/:id/status
+exports.updateMeetingStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!["upcoming", "ongoing", "completed"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+    const meeting = await Meeting.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    if (!meeting) return res.status(404).json({ message: "Meeting not found" });
+    res.json(meeting);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update meeting status" });
   }
 };
 

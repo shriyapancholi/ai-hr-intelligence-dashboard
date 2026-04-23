@@ -7,5 +7,6 @@ router.get("/all", auth, transcriptController.getAllTranscripts);
 router.post("/upload", auth, transcriptController.uploadTranscript);
 router.get("/employee/:employeeId", auth, transcriptController.getEmployeeTranscripts);
 router.patch("/:id/analysis", auth, transcriptController.updateTranscriptAnalysis);
+router.delete("/:id", auth, transcriptController.deleteTranscript);
 
 module.exports = router;

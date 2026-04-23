@@ -39,13 +39,28 @@ exports.getAllTranscripts = async (req, res) => {
       .populate("employeeId", "name")
       .sort({ meetingDate: -1 })
       .limit(100);
-    const result = transcripts.map((t) => ({
-      ...t.toObject(),
-      employeeName: t.employeeId?.name || "",
-    }));
+    const result = transcripts.map((t) => {
+      const obj = t.toObject();
+      const populated = obj.employeeId; // object if found, null if deleted
+      return {
+        ...obj,
+        employeeId: populated?._id?.toString() ?? obj.employeeId?.toString() ?? "",
+        employeeName: populated?.name || "Unknown Employee",
+      };
+    });
     res.json(result);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch transcripts" });
+  }
+};
+
+exports.deleteTranscript = async (req, res) => {
+  try {
+    const transcript = await Transcript.findByIdAndDelete(req.params.id);
+    if (!transcript) return res.status(404).json({ message: "Transcript not found" });
+    res.json({ message: "Deleted" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to delete transcript" });
   }
 };
 

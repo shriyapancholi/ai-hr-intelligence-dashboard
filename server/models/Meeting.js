@@ -8,6 +8,7 @@ const meetingSchema = new mongoose.Schema(
     meetingLink: { type: String, default: "" },
     calendarEventId: { type: String, default: "" },
     createdBy: { type: String, default: "HR Manager" },
+    status: { type: String, enum: ["upcoming", "ongoing", "completed"], default: null },
   },
   { timestamps: true }
 );

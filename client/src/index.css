@@ -156,7 +156,7 @@ h4 {
   left: var(--sidebar-width);
   right: 0;
   height: var(--navbar-height);
-  background: white;
+  background: var(--bg-card);
   border-bottom: 1px solid var(--gray-200);
   display: flex;
   align-items: center;
@@ -209,7 +209,13 @@ h4 {
 
 .btn-outline {
   border: 1px solid var(--gray-300);
-  background: white;
+  background: var(--bg-card);
+  color: var(--gray-700);
+}
+
+.badge-neutral {
+  background: #F1F5F9;
+  color: #475569;
 }
 
 .btn-sm {
@@ -397,6 +403,44 @@ tbody td {
 }
 
 /* =========================
+   STAT CARD
+========================= */
+.stat-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm);
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* =========================
+   TOGGLE SWITCH
+========================= */
+.toggle-switch {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle-switch .thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+/* =========================
    RESPONSIVE
 ========================= */
 @media (max-width: 1200px) {
@@ -411,4 +455,169 @@ tbody td {
   .grid-3 {
     grid-template-columns: 1fr;
   }
+}
+
+/* =========================
+   DARK MODE
+========================= */
+[data-theme="dark"] {
+  --bg-base: #0F172A;
+  --bg-card: #1E293B;
+  --bg-sidebar: #080E1A;
+
+  --gray-50:  #1E293B;
+  --gray-100: #253449;
+  --gray-200: #334155;
+  --gray-300: #475569;
+  --gray-400: #64748B;
+  --gray-500: #94A3B8;
+  --gray-600: #CBD5E1;
+  --gray-700: #E2E8F0;
+  --gray-800: #F1F5F9;
+  --gray-900: #F8FAFC;
+
+  color-scheme: dark;
+}
+
+[data-theme="dark"] body {
+  background: var(--bg-base);
+  color: #E2E8F0;
+}
+
+[data-theme="dark"] .navbar .btn-icon {
+  color: #94A3B8;
+}
+
+[data-theme="dark"] .card {
+  background: var(--bg-card);
+  border-color: #334155;
+}
+
+[data-theme="dark"] .stat-card {
+  background: var(--bg-card);
+  border-color: #334155;
+}
+
+[data-theme="dark"] .card-header {
+  border-color: #334155;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4 {
+  color: #F1F5F9;
+}
+
+[data-theme="dark"] .form-input {
+  background: #0F172A;
+  border-color: #334155;
+  color: #E2E8F0;
+}
+
+[data-theme="dark"] .form-input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+[data-theme="dark"] .form-input::placeholder {
+  color: #475569;
+}
+
+[data-theme="dark"] .form-input:disabled {
+  background: #1E293B;
+  color: #475569;
+}
+
+[data-theme="dark"] select.form-input option {
+  background: #1E293B;
+  color: #E2E8F0;
+}
+
+[data-theme="dark"] .btn-outline {
+  background: #1E293B;
+  border-color: #334155;
+  color: #CBD5E1;
+}
+
+[data-theme="dark"] .btn-outline:hover {
+  background: #253449;
+}
+
+[data-theme="dark"] .search-bar {
+  background: #1E293B;
+  border-color: #334155;
+  color: #E2E8F0;
+}
+
+[data-theme="dark"] .search-bar input {
+  color: #E2E8F0;
+}
+
+[data-theme="dark"] .search-bar input::placeholder {
+  color: #475569;
+}
+
+[data-theme="dark"] table thead {
+  background: #1E293B;
+}
+
+[data-theme="dark"] table thead th {
+  color: #94A3B8;
+}
+
+[data-theme="dark"] tbody td {
+  border-color: #253449;
+  color: #CBD5E1;
+}
+
+[data-theme="dark"] tbody tr:hover td {
+  background: #253449 !important;
+}
+
+[data-theme="dark"] .progress-bar {
+  background: #334155;
+}
+
+[data-theme="dark"] .icon-box {
+  background: #253449;
+}
+
+[data-theme="dark"] .badge {
+  background: #334155;
+  color: #CBD5E1;
+}
+
+[data-theme="dark"] .badge-success {
+  background: #14532D;
+  color: #86EFAC;
+}
+
+[data-theme="dark"] .badge-danger {
+  background: #7F1D1D;
+  color: #FCA5A5;
+}
+
+[data-theme="dark"] .badge-neutral {
+  background: #1E293B;
+  color: #94A3B8;
+  border: 1px solid #334155;
+}
+
+[data-theme="dark"] .badge-warning {
+  background: #78350F;
+  color: #FCD34D;
+}
+
+[data-theme="dark"] .text-muted {
+  color: #64748B;
+}
+
+[data-theme="dark"] .page-header p {
+  color: #64748B;
+}
+
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="datetime-local"] {
+  color-scheme: dark;
 }
